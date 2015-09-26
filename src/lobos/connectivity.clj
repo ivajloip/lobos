@@ -62,6 +62,8 @@
   (or ((set (keys @global-connections)) cnx)
       (map? cnx)))
 
+(def ^{:dynamic true} *uses-provided-connection* false)
+
 ;; -----------------------------------------------------------------------------
 
 ;; ## Global Connections
@@ -139,6 +141,13 @@
                connection-name
                (vec (keys @global-connections))))))))
 
+(defn with-opened-connection
+  "Evaluates func in the context of the provided connection to a database."
+  [db-spec func]
+  (binding [sqlint/*db* (assoc db-spec :db-spec (or (:db-spec db-spec) db-spec))
+            *uses-provided-connection* true]
+    (func)))
+
 (defn with-spec-connection
   "Evaluates func in the context of a new connection to a database then
   closes the connection."
@@ -154,11 +163,12 @@
       (func))))
 
 (defmacro with-connection
-  "Evaluates body in the context of a new connection or a named global
-  connection to a database then closes the connection if it's a new
-  one. The connection-info parameter can be a keyword denoting a global
-  connection or a map containing values for one of the following
-  parameter sets:
+  "Evaluates body in the context of a new connection, an existing connection
+  provided to with-opened-connection or a named global connection to a database
+  then closes the connection if it's a new one. The connection-info parameter is
+  ignored in the case of use of with-opened-connection, otherwise can be a
+  keyword denoting a global connection or a map containing values for one of
+  the following parameter sets:
 
    *  Factory:
      * `:factory` (required) a function of one argument, a map of params
@@ -183,10 +193,14 @@
      * `:auto-commit` (optional) a Boolean
      * `:fetch-size`  (optional) an integer"
   [connection-info & body]
-  `(let [connection-info# (or ~connection-info :default-connection)]
-     ((if (keyword? connection-info#)
-        with-named-connection
-        with-spec-connection) connection-info# (fn [] ~@body))))
+  `(let [connection-info# (or (and *uses-provided-connection* sqlint/*db*)
+                              ~connection-info
+                              :default-connection)
+         connection-func# (cond
+                            *uses-provided-connection* with-opened-connection
+                            (keyword? connection-info#) with-named-connection
+                            :else with-spec-connection)]
+     (connection-func# connection-info# (fn [] ~@body))))
 
 (defn default-connection
   "Returns the default connection if it exists."

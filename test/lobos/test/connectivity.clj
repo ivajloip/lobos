@@ -65,6 +65,11 @@
          *cnx*)
       "With connection specification"))
 
+(deftest test-with-opened-connection
+  (is (= (with-opened-connection {:connection *cnx*} #(connection))
+         *cnx*)
+      "With opened connection provided"))
+
 (deftest test-with-connection
   (is (= (with-connection {}
            (connection))
