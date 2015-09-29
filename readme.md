@@ -1,6 +1,6 @@
 # Lobos
 
-[![Continuous Integration status](https://secure.travis-ci.org/budu/lobos.png)](http://travis-ci.org/budu/lobos)
+[![Continuous Integration status](https://secure.travis-ci.org/ivajloip/lobos.png)](http://travis-ci.org/ivajloip/lobos)
 
 **Lobos** is a SQL database schema manipulation and migration library
 written in [Clojure]. It currently support supports H2, MySQL,
@@ -22,7 +22,7 @@ For the latest release, in Cake/Leiningen, use:
 
 #### `project.clj`
 ```clojure
-:dependencies [[lobos "1.0.0-beta3"]]
+:dependencies [[org.clojars.ivajloip/lobos "1.0.0-beta"]]
 ```
 
 or in Maven:
@@ -30,9 +30,9 @@ or in Maven:
 #### `pom.xml`
 ```xml
 <dependency>
-  <groupId>lobos</groupId>
+  <groupId>org.clojars.ivajloip</groupId>
   <artifactId>lobos</artifactId>
-  <version>1.0.0-beta3</version>
+  <version>1.0.0-beta</version>
 </dependency>
 ```
 
@@ -48,7 +48,7 @@ to the `dependencies` section:
 
 ```clojure
 :dependencies [...
-               [lobos "1.0.0-beta1"]
+               [org.clojars.ivajloip/lobos "1.0.0-beta"]
                [postgresql "9.1-901.jdbc4"]]
 ```
 
