@@ -10,6 +10,7 @@
   "Migrations support."
   (:refer-clojure :exclude [complement defonce replace])
   (:require (clojure.java.jdbc [deprecated :as sql])
+            [clojure.java.jdbc :as jdbc]
             (lobos [analyzer :as analyzer]
                    [compiler :as compiler]
                    [connectivity :as conn]
@@ -40,6 +41,8 @@
 (def ^{:dynamic true} *migrations-table* :lobos_migrations)
 
 (def ^{:dynamic true} *reload-migrations* true)
+
+(def ^{:dynamic true} *migrations-in-transactions* true)
 
 ;; -----------------------------------------------------------------------------
 
@@ -238,6 +241,17 @@
                                    sname)
            (list-migrations-names)))
 
+(defn execute-in-transaction
+  "Execute sql related operations inside a transaction
+
+  The db-spec specifies the connection for the sql operation and func specifies the
+  operations to be performed."
+  [db-spec func]
+  (jdbc/with-db-transaction [con db-spec]
+    (.setAutoCommit (:connection con) false)
+    (conn/with-opened-connection con
+      func)))
+
 (defn do-migrations [db-spec sname with names & [silent]]
   (let [filter-migs #(only % (list-migrations-names))
         migrations (->> names
@@ -249,15 +263,20 @@
                         (map var-get))]
     (binding [*record* nil]
       (doseq [migration migrations]
-        (let [name (-> migration meta :name)]
+        (let [name (-> migration meta :name)
+              executor (if *migrations-in-transactions*
+                         (fn [action migration] (execute-in-transaction
+                                                  db-spec
+                                                  #(action migration)))
+                         #(%1 %2))]
           (when-not silent
             (println name))
           (if (= with :up)
             (do
-              (up migration)
+              (executor up migration)
               (insert-migrations db-spec sname name))
             (do
-              (down migration)
+              (executor down migration)
               (delete-migrations db-spec sname name))))))))
 
 (defn generate-migration* [db-spec sname name msg actions]
