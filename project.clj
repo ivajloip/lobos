@@ -1,7 +1,7 @@
 (defproject org.clojars.ivajloip/lobos "1.0.0-beta1"
   :description
   "A library to create and manipulate SQL database schemas."
-  :url "http://budu.github.com/lobos/"
+  :url "http://github.com/ivajloip/lobos/"
   :license {:name "Eclipse Public License"}
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [org.clojure/java.jdbc "0.3.3"]
